@@ -1,7 +1,7 @@
 # Redrob Hackathon — Hybrid Candidate Ranker
 
 
-## HUGGINGFACE
+## HUGGINGFACE UI
 ```
 https://huggingface.co/spaces/nileshpar835/redrob-ranker
 ```
