@@ -1,5 +1,12 @@
 # Redrob Hackathon — Hybrid Candidate Ranker
 
+
+## HUGGINGFACE
+```
+https://huggingface.co/spaces/nileshpar835/redrob-ranker
+```
+
+
 Hybrid (rule-based + semantic retrieval) ranker for the *Senior AI
 Engineer — Founding Team* JD, scored against 100,000 candidates. Produces
 a top-100 ranking CSV matching `submission_spec.md`.
