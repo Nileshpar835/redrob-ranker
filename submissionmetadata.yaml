@@ -14,8 +14,8 @@ team_members:
     role: "ML Engineer"
   # Add more members as needed
 
-github_repo: "https://github.com/YOUR_USERNAME/redrob-ranker"   # <-- EDIT
-sandbox_link: "https://huggingface.co/spaces/YOUR_USERNAME/redrob-ranker"  # <-- EDIT
+github_repo: "https://github.com/Nileshpar835/redrob-ranker"   # <-- EDIT
+sandbox_link: "https://huggingface.co/spaces/nileshpar835/redrob-ranker"  # <-- EDIT
 
 reproduce_command: "python rank.py --candidates ./candidates.jsonl --out ./submission.csv"
 # NOTE: requires retrieval_index/ and jd_query.txt to be present (built via
