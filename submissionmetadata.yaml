@@ -1,0 +1,93 @@
+# Redrob Hackathon — Submission Metadata
+# Filled-in copy of submission_metadata_template.yaml
+
+team_name: "your-team-name-here"   # <-- EDIT: set your registered team name
+
+primary_contact:
+  name: "Nilesh Parmar"           # <-- EDIT
+  email: "nileshpar835@gmail.com"         # <-- EDIT
+  phone: "+91-9016070514"          # <-- EDIT
+
+team_members:
+  - name: "Nilesh Parmar"         # <-- EDIT
+    email: "nileshpar835@gmail    .com"       # <-- EDIT
+    role: "ML Engineer"
+  # Add more members as needed
+
+github_repo: "https://github.com/YOUR_USERNAME/redrob-ranker"   # <-- EDIT
+sandbox_link: "https://huggingface.co/spaces/YOUR_USERNAME/redrob-ranker"  # <-- EDIT
+
+reproduce_command: "python rank.py --candidates ./candidates.jsonl --out ./submission.csv"
+# NOTE: requires retrieval_index/ and jd_query.txt to be present (built via
+# precompute_index.py and extract_jd_query.py — see README "Quick start").
+# If retrieval_index/ is committed to the repo, this single command is
+# sufficient. Both are included in this submission.
+
+compute:
+  platform: "Local Linux box"      # <-- EDIT to match what you actually used
+  cpu_cores: 4
+  ram_gb: 16
+  python_version: "3.11"           # <-- EDIT, run `python --version`
+  os: "Ubuntu 22.04 LTS"           # <-- EDIT
+  uses_gpu_for_inference: false
+  has_network_during_ranking: false
+  pre_computation_required: true
+  pre_computation_time_minutes: 2
+  # pre-computation = building the TF-IDF retrieval index (precompute_index.py,
+  # ~60-90s for 100K candidates) and the LLM-derived JD query
+  # (extract_jd_query.py, one-time/offline). Both artifacts are checked into
+  # the repo so the ranking step itself needs no pre-computation.
+
+ai_tools_used:
+  - "Claude"
+  # Add others if used, e.g. "GitHub Copilot", "ChatGPT", "Cursor"
+
+ai_usage_summary: |
+  Used Claude to draft the overall hybrid architecture (rule-based +
+  TF-IDF semantic retrieval), write the rule-based feature scorers
+  (title/skill/career/honeypot/behavioral components), write the offline
+  retrieval-index builder (precompute_index.py), and -- as the explicit
+  "LLM-powered workflow" step -- read the full job_description.md and
+  distill it into the retrieval query used in jd_query.txt
+  (extract_jd_query.py). All weights, thresholds, and the overall scoring
+  design were reviewed and iterated on by the team. No candidate data was
+  sent to any hosted LLM; the JD-distillation step used only the public JD
+  text. The ranking step itself (rank.py) makes no LLM or network calls --
+  it loads precomputed local artifacts (TF-IDF index, JD query text) and
+  runs entirely offline/CPU.
+
+methodology_summary: |
+  Hybrid ranker combining rule-based feature scoring with a semantic
+  retrieval component. Six weighted components are combined into a base
+  score: title fit, career substance (scanned from career_history
+  descriptions, not just skill tags), trust-weighted skill coverage,
+  semantic-retrieval fit (TF-IDF cosine similarity between the candidate's
+  profile/career text and an LLM-distilled "ideal candidate" query derived
+  from the JD), experience-band fit, location fit, and education tier. Two
+  multiplicative adjustments follow: a honeypot-consistency penalty
+  (catches "expert" skills with zero duration, career-duration/years-of-
+  experience mismatches, overlapping current jobs, education timeline
+  inconsistencies) and a behavioral-availability multiplier (recency of
+  activity, recruiter response rate, open-to-work status, interview
+  completion, profile completeness, verification).
+
+  The semantic-retrieval index (TF-IDF over career history + skills +
+  summary, 100K x ~18.6K terms) is built offline via precompute_index.py
+  (~60-90s) and committed to the repo; the JD query is distilled offline
+  via an LLM reading the full job description (extract_jd_query.py).
+  TF-IDF + cosine similarity was chosen over neural embeddings because the
+  ranking environment has no network access for model downloads; the
+  architecture is designed so a sentence-transformer model could be
+  substituted as a drop-in replacement for the vectorizer if available.
+
+  Title fit and career substance carry the highest weight, as the primary
+  defense against keyword-stuffer traps. Ranking runtime is ~40 seconds
+  for 100K candidates on a single CPU core, no network or GPU at ranking
+  time.
+
+declarations:
+  read_submission_spec: true
+  code_is_original_work: true
+  no_collusion: true
+  honeypot_check_done: true
+  reproduction_tested: true

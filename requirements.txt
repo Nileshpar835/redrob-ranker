@@ -1,0 +1,13 @@
+# rank.py and precompute_index.py use:
+#   - Python standard library (argparse, csv, gzip, json, re, datetime, pickle, os)
+#   - numpy, scipy, scikit-learn (for the TF-IDF semantic retrieval component)
+#
+# All of these are CPU-only, install from PyPI with no model downloads.
+# Python >= 3.9 recommended.
+
+numpy>=1.24
+scipy>=1.10
+scikit-learn>=1.3
+
+# The sandbox app (app.py) additionally requires:
+gradio>=4.0.0

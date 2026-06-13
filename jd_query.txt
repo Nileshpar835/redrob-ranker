@@ -1,0 +1,29 @@
+Senior AI engineer with hands-on production experience building and
+operating embeddings-based retrieval systems (sentence-transformers,
+OpenAI embeddings, BGE, E5) deployed to real users, including handling
+embedding drift, index refresh, and retrieval-quality regression.
+Production experience with vector databases or hybrid search
+infrastructure: Pinecone, Weaviate, Qdrant, Milvus, OpenSearch,
+Elasticsearch, FAISS, BM25 hybrid retrieval. Strong Python, high code
+quality. Hands-on experience designing evaluation frameworks for ranking
+systems: NDCG, MRR, MAP, offline-to-online correlation, A/B testing.
+Has shipped at least one end-to-end ranking, search, recommendation, or
+matching system to real users at meaningful scale, at a product company
+(not a pure consulting or services firm). Strong opinions on retrieval
+architecture (hybrid versus dense), evaluation methodology (offline versus
+online), and LLM integration (fine-tuning versus prompting), grounded in
+systems actually built and operated. Comfortable with LLM fine-tuning
+(LoRA, QLoRA, PEFT), learning-to-rank models (XGBoost or neural),
+distributed systems, large-scale inference optimization. Background in
+recruiting technology, HR-tech, or marketplace products is a plus.
+Title reflects engineering ownership of ranking, retrieval, matching, or
+recommendation systems -- machine learning engineer, applied scientist,
+search engineer, recommendation systems engineer, ML platform engineer.
+Six to nine years total experience, several years in applied ML or AI
+roles at product companies. Has written production code recently, not
+purely in architecture or tech-lead roles for the last 18 months.
+NLP, information retrieval, or search/ranking background, not purely
+computer vision, speech, or robotics. Open-source contributions, technical
+blog posts, or papers demonstrating systems thinking rather than framework
+tutorials. Based in or willing to relocate to Pune, Noida, Delhi NCR,
+Hyderabad, or Mumbai, India.
