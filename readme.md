@@ -60,6 +60,15 @@ redrob-ranker/
 ├── candidates.jsonl                   # (your data — not part of deliverable)
 └── validate_submission.py             # (provided by organizers — not part of deliverable)
 ```
+## Dependency graph
+```
+extract_jd_query.py ──► jd_query.txt ─────────┐
+                                                ├──► rank.py ──► submission.csv
+precompute_index.py ──► retrieval_index/ ──────┘        ▲
+        ▲                                                │
+        └── candidate_document() in rank.py ─────────────┘
+            (shared helper, imported by precompute_index.py and app.py)
+```
 
 ## Quick start
 
