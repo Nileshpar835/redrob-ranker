@@ -40,7 +40,7 @@ compute:
   # the repo so the ranking step itself needs no pre-computation.
 
 ai_tools_used:
-  - "Claude , Git Copilot"
+  - "Claude , Git Copilot , Chatgpt"
   # Add others if used, e.g. "GitHub Copilot", "ChatGPT", "Cursor"
 
 ai_usage_summary: |
