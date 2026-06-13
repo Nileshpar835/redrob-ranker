@@ -160,6 +160,31 @@ ML_GENERAL_TERMS = [
     "search system", "classification model", "regression model",
 ]
 
+# Human-readable display names for evidence terms (used only in reasoning
+# text, so raw regex/matching fragments like "fine-tun" or "ann " don't
+# leak into the output verbatim).
+TERM_DISPLAY = {
+    "fine-tun": "LLM fine-tuning",
+    "ann ": "approximate nearest-neighbor search",
+    "map@": "MAP-based ranking evaluation",
+    "ab test": "A/B testing",
+    "a/b test": "A/B testing",
+    "ltr": "learning-to-rank",
+    "ctr": "click-through-rate analysis",
+    "rag": "RAG (retrieval-augmented generation)",
+    "gpt": "GPT-based LLM work",
+    "e5": "E5 embeddings",
+    "bge": "BGE embeddings",
+    "vector db": "vector database",
+    "ndcg": "NDCG-based ranking evaluation",
+    "mrr": "MRR-based ranking evaluation",
+}
+
+
+def display_term(t):
+    return TERM_DISPLAY.get(t, t).strip()
+
+
 # Pure consulting firms named in the JD as a soft negative if it's the
 # *entire* career.
 CONSULTING_FIRMS = [
@@ -640,7 +665,20 @@ def score_candidate(cand, ref_date, semantic_score=0.0):
 # Reasoning generation
 # ---------------------------------------------------------------------------
 
-def build_reasoning(cand, components, score):
+def build_reasoning(cand, components, score, rank=None):
+    """Builds a 1-3 sentence, profile-grounded reasoning string.
+
+    Designed against the Stage 4 manual-review checklist:
+      - cites specific facts (years, title, named skills/signals)
+      - connects to JD requirements (title/skill/career/location framing)
+      - acknowledges weaknesses honestly (lowest-scoring component(s) for
+        this candidate are surfaced as concerns, not hidden)
+      - avoids hallucination: every named skill/term comes from
+        career_blob/skills, which are derived directly from the profile
+      - rank-aware tone: candidates further down the list get reasoning
+        that explicitly notes why they trail the top picks, rather than
+        reusing top-pick phrasing.
+    """
     p = cand.get("profile", {})
     title = p.get("current_title", "Unknown title")
     yoe = p.get("years_of_experience", 0)
@@ -654,14 +692,15 @@ def build_reasoning(cand, components, score):
     blob = career_blob(cand)
     evidence_terms = RETRIEVAL_TERMS + RANKING_EVAL_TERMS + LLM_TERMS + ML_GENERAL_TERMS
     found = [t for t in evidence_terms if t in blob]
-    if found:
-        # pick up to 2 distinct, readable terms
-        readable = []
-        for t in found:
-            if t.strip() and t not in readable:
-                readable.append(t.strip())
-            if len(readable) == 2:
-                break
+    readable = []
+    for t in found:
+        d = display_term(t)
+        if d and d not in readable:
+            readable.append(d)
+        if len(readable) == 2:
+            break
+
+    if readable:
         bits.append("Career history shows " + " and ".join(readable) + " experience.")
     elif components["career"] < 0.15:
         bits.append("Limited evidence of production retrieval/ranking work in career history.")
@@ -670,30 +709,57 @@ def build_reasoning(cand, components, score):
     if components["skills"] >= 0.5:
         bits.append("Strong, duration-backed AI/IR skill set.")
     elif components["skills"] >= 0.2:
-        bits.append("Some relevant skills, moderate endorsement/duration backing.")
+        bits.append("Some relevant skills, but moderate endorsement/duration backing.")
     else:
-        bits.append("Few JD-relevant skills with real usage history.")
+        bits.append("Few JD-relevant skills with real usage history -- a notable gap.")
 
     # Semantic / retrieval signal.
-    if components.get("semantic", 0) >= 0.7:
+    sem = components.get("semantic", 0)
+    if sem >= 0.7:
         bits.append("Profile text is a strong semantic match to the JD's ideal-candidate description.")
-    elif components.get("semantic", 0) <= 0.2:
+    elif sem <= 0.2:
         bits.append("Profile text has low semantic overlap with the JD's ideal-candidate description.")
 
     # Behavioral.
     if rr is not None:
-        bits.append(f"Recruiter response rate {rr:.2f}.")
+        if rr >= 0.5:
+            bits.append(f"Recruiter response rate {rr:.2f} -- engaged.")
+        else:
+            bits.append(f"Recruiter response rate {rr:.2f} -- a concern for outreach.")
 
     if not sig.get("open_to_work_flag", True):
         bits.append("Not currently marked open-to-work, down-weighted.")
 
+    notice = sig.get("notice_period_days")
+    if notice is not None and notice > 30:
+        bits.append(f"Notice period of {notice} days is longer than the JD's sub-30-day preference.")
+
     # Location.
     if components["location"] >= 0.9:
-        bits.append("Based in Pune/Noida, matching JD's preferred locations.")
+        bits.append("Based in Pune/Noida, matching the JD's preferred locations.")
     elif components["location"] <= 0.4:
         bits.append("Location is a weaker match for the Pune/Noida-centric role.")
 
+    # Honest concerns: surface the weakest component(s) explicitly so the
+    # reasoning's tone tracks the rank, rather than sounding uniformly
+    # positive across all 100 rows.
+    weak_components = {
+        "title": "title is only an adjacent match to the AI/ML/retrieval archetype the JD wants",
+        "career": "career history shows limited direct evidence of shipping retrieval/ranking systems",
+        "skills": "skill list has limited JD-relevant, duration-backed entries",
+        "semantic": "overall profile language only partially overlaps with the JD's ideal-candidate description",
+        "experience": "years of experience sits outside the JD's 5-9 year band",
+        "location": "location is a weaker fit for the Pune/Noida-centric role",
+        "education": "education background is only a loose fit for the role",
+    }
+    sorted_components = sorted(components.items(), key=lambda kv: kv[1])
+    weakest_key, weakest_val = sorted_components[0]
+
+    if rank is not None and rank > 20 and weakest_key in weak_components and weakest_val < 0.4:
+        bits.append(f"Main gap relative to top picks: {weak_components[weakest_key]}.")
+
     return " ".join(bits)
+
 
 
 # ---------------------------------------------------------------------------
@@ -790,7 +856,7 @@ def main():
         if prev_score is not None and score > prev_score:
             score = prev_score  # defensive: enforce non-increasing
         prev_score = score
-        reasoning = build_reasoning(cand, components, score)
+        reasoning = build_reasoning(cand, components, score, rank=rank)
         rows.append({
             "candidate_id": cand["candidate_id"],
             "rank": rank,

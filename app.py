@@ -87,7 +87,7 @@ def rank_sample(file_obj):
         if prev_score is not None and score > prev_score:
             score = prev_score
         prev_score = score
-        reasoning = build_reasoning(cand, components, score)
+        reasoning = build_reasoning(cand, components, score, rank=rank)
         writer.writerow({
             "candidate_id": cand["candidate_id"],
             "rank": rank,
